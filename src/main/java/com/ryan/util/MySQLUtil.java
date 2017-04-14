@@ -1,6 +1,8 @@
 package com.ryan.util;
 
+import com.ryan.pojo.Course;
 import com.ryan.pojo.Knowledge;
+import com.ryan.pojo.User;
 import com.ryan.pojo.UserLocation;
 
 import java.sql.Connection;
@@ -21,12 +23,25 @@ import javax.servlet.http.HttpServletRequest;
  * @date 2017-02-03 22:08:13
  */
 public class MySQLUtil {
+    public static void main(String[] args) {
+        List<User> userList = new ArrayList<>();
+        userList = getAllUsers();
+        for (User user : userList) {
+            System.out.println(user);
+        }
+
+        User user = getUser("1");
+        System.out.println(user);
+
+        Course course = getCourse("3");
+        System.out.println(course);
+    }
 
     private Connection getConn() {
         Connection conn = null;
 
         String dbName = "mooc";
-        String host = "http://119.29.231.159";
+        String host = "localhost";
         String port = "3306";
         String username = "root";
         String password = "root";
@@ -40,10 +55,9 @@ public class MySQLUtil {
             // 加载MySQL驱动
             Class.forName(driverName);
             // 获取数据库连接
-            System.out.println("找不到驱动程序类 ，加载驱动失败！");
             conn = DriverManager.getConnection(connName, username, password);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("找不到驱动程序类 ，加载驱动失败！");
         }
         return conn;
     }
@@ -91,6 +105,97 @@ public class MySQLUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 查找mooc数据库全部用户
+     *
+     * @return
+     */
+    public static List<User> getAllUsers() {
+        List<User> userList = new ArrayList<>();
+        String sql = "select * from user order by USER_ID asc";
+        MySQLUtil mysqlUtil = new MySQLUtil();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = mysqlUtil.getConn();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getString("USER_ID"));
+                user.setBirthday(rs.getDate("BIRTHDAY").toString());
+                userList.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            mysqlUtil.releaseResources(conn, ps, rs);
+        }
+
+        return userList;
+    }
+
+    /**
+     * 获取指定user
+     * @param userId
+     * @return
+     */
+    public static User getUser(String userId) {
+        User user = new User();
+        String sql = "select * from user where USER_ID=?";
+        MySQLUtil mysqlUtil = new MySQLUtil();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = mysqlUtil.getConn();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, userId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                user.setUserId(rs.getString("USER_ID"));
+                user.setBirthday(rs.getDate("BIRTHDAY").toString());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            mysqlUtil.releaseResources(conn, ps, rs);
+        }
+
+        return user;
+    }
+
+    /**
+     * 获取指定课程
+     * @param courseId
+     * @return
+     */
+    public static Course getCourse(String courseId) {
+        Course course = new Course();
+        String sql = "select * from course where COURSE_ID=?";
+        MySQLUtil mysqlUtil = new MySQLUtil();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = mysqlUtil.getConn();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, courseId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                course.setCourseId(rs.getString("COURSE_ID"));
+                course.setCourseTitle(rs.getString("COURSE_TITLE"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            mysqlUtil.releaseResources(conn, ps, rs);
+        }
+
+        return course;
     }
 
     /**
